@@ -20,21 +20,12 @@ const FolderManager = require("./folderManager");
 
 module.exports = (win) => {
   class GameManager {
-    constructor() {
-      // set minecraftDir depends on platform
-      if (process.platform == "win32") {
-        this.minecraftDir = path.join(app.getPath("appData"), ".minecraft");
-      } else if (process.platform == "darwin") {
-        this.minecraftDir = path.join(app.getPath("appData"), "minecraft");
-      } else if (process.platform == "linux") {
-        this.minecraftDir = path.join(app.getPath("home"), ".minecraft");
-      } else {
-        // TO-DO - add popup for error
-        throw new Error("Unsupported platform");
-      }
-        // añadir la nueva clase
-        this.folderManager = new FolderManager(this.minecraftDir);
-        this.alreadyLaunched = false;
+    constructor(gameDir) {
+      this.gameDir = gameDir;
+      this.folderManager = new FolderManager(gameDir);
+      this.assetsDir = path.join(this.gameDir, "assets");
+      this.libsDir = path.join(this.gameDir, "libraries");
+      this.nativesDir = path.join(this.gameDir, "natives");
       }
 
     async downloadJava(javaVersionCode) {
@@ -201,3 +192,5 @@ module.exports = (win) => {
     });
   });
 }
+
+module.exports = GameManager;
