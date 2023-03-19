@@ -18,7 +18,7 @@ let [appData, minecraftDir, versionsDir] = [];
 if (process.platform == "win32") {
   appData = process.env.APPDATA;
   minecraftDir = path.join(appData, ".minecraft");
-  versionsDir = path.join(appData, "C:", "Program Files", "DrStudio Launcher", "resources", "versions");
+  versionsDir = path.join(minecraftDir, "versions");
 } else if (process.platform == "darwin") {
   appData = process.env.HOME;
   minecraftDir = path.join(appData, "Library", "Application Support", "minecraft");
@@ -34,15 +34,15 @@ if (process.platform == "win32") {
 
 module.exports = (win) => {
   class VersionManager {
-    constructor() {
+    constructor(gameDir) {
       this.versions = [];
       this.latest = {};
       this.selectedVersion = null;
       this.selectedProfile = null;
       this.doesExist = false;
       this.active = false;
-      this.folderManager = new FolderManager();
-      this.versionsDir = this.folderManager.getVersionsDir();
+      this.gameDir = gameDir;
+      this.folderManager = new FolderManager(gameDir);
     }
 
     async init() {
@@ -135,7 +135,6 @@ module.exports = (win) => {
       let profiles = await db.get("profiles").value();
       this.profiles = profiles;
     }
-
     async addProfile(profile = {}) {
       profile.version = profile.version || this.latest.release;
       profile.type = profile.type || "release";
@@ -149,6 +148,10 @@ module.exports = (win) => {
         name: "Latest Release",
       };
       profile.isSelected = profile.isSelected || false;
+      // or profile.isSelected ??= false;
+      db.get("profiles").push(profile).write();
+      await this.loadProfiles();
+
       profile.acronym = profile.appearance.name.replace(/\s/g, "").toLowerCase();
       let profileExists = await db.get("profiles").find({
         acronym: profile.appearance.name.replace(/\s/g, "").toLowerCase()
